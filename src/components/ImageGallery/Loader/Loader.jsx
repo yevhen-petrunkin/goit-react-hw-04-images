@@ -1,7 +1,12 @@
 import { ThreeCircles } from 'react-loader-spinner';
 
 export const Loader = () => (
-  <div style={{ display: 'block', margin: '0 auto' }}>
+  <div
+    style={{
+      display: 'block',
+      margin: '0 auto',
+    }}
+  >
     <ThreeCircles
       height="60"
       width="60"

@@ -31,23 +31,29 @@ export class ImageGallery extends Component {
 
     if (this.normalizePrevQuery(prevProps) !== query.toLowerCase()) {
       this.setState({ status: 'pending' });
-      if (query) {
-        this.fetchSearchResults(BASE, query, page, searchParams)
-          .then(r => {
-            if (r.ok) {
-              return r.json();
-            }
-          })
-          .then(obj =>
-            this.setState({
-              searchResults: obj.hits,
-              status: 'resolved',
-            })
-          )
-          .catch(error => this.setState({ error, status: 'rejected' }));
+      if (!query) {
+        this.setState({ status: 'idle' });
+        return;
       }
-      this.setState({ status: 'idle' });
+      this.fetchSearchResults(BASE, query, page, searchParams)
+        .then(r => {
+          if (r.ok) {
+            return r.json();
+          }
+        })
+        .then(obj => {
+          if (obj.hits.length === 0) {
+            this.setState({ status: 'idle' });
+            return;
+          }
+          this.setState({
+            searchResults: obj.hits,
+            status: 'resolved',
+          });
+        })
+        .catch(error => this.setState({ error, status: 'rejected' }));
     }
+
     if (prevState.page !== page) {
       this.setState({ status: 'pending' });
       this.fetchSearchResults(BASE, query, page, searchParams)
