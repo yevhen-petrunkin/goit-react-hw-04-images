@@ -10,7 +10,7 @@ export class Searchbar extends Component {
   onFormChange = evt => this.setState({ query: evt.target.value.trim() });
   onFormSubmit = evt => {
     evt.preventDefault();
-    this.props.onSubmit(this.state.query);
+    this.props.onSubmit(this.state.query.trim());
     this.formReset();
   };
 

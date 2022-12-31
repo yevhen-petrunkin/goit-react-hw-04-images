@@ -1,8 +1,8 @@
 import css from './Button.module.css';
 
-export const Button = ({ onCLick }) => {
+export const Button = ({ onClick }) => {
   return (
-    <button className={css.Button} onClick={onCLick}>
+    <button className={css.Button} autoFocus onClick={onClick}>
       Load more
     </button>
   );
