@@ -127,7 +127,7 @@ export class ImageGallery extends Component {
           <Button type="button" onClick={this.loadMore} />
         )}
         {showModal && (
-          <Modal image={image} info={info} onClick={this.toggleModal} />
+          <Modal image={image} info={info} onClose={this.toggleModal} />
         )}
       </>
     );
