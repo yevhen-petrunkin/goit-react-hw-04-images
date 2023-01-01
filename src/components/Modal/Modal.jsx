@@ -33,12 +33,12 @@ export class Modal extends Component {
   stopLoader = () => this.setState({ isLoading: false });
 
   render() {
-    const { image, info } = this.props;
+    const { largeurl, info } = this.props;
     return createPortal(
       <div className={css.Overlay} onClick={this.handleOverlayClick}>
         <div className={css.Modal}>
           {this.state.isLoading && <Loader />}
-          <img src={image} alt={info} onLoad={() => this.stopLoader()} />
+          <img src={largeurl} alt={info} onLoad={() => this.stopLoader()} />
         </div>
       </div>,
       modalRoot

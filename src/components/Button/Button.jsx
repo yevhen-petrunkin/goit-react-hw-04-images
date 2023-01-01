@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 export const Button = ({ onClick }) => {
   return (
-    <button className={css.Button} autoFocus onClick={onClick}>
+    <button className={css.Button} onClick={onClick}>
       Load more
     </button>
   );

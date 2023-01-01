@@ -11,63 +11,60 @@ export class App extends Component {
   state = {
     query: '',
     searchResults: [],
-    error: null,
+    error: '',
     status: 'idle',
     page: 1,
     showModal: false,
-    image: '',
+    largeImgURL: '',
     info: '',
   };
 
   componentDidUpdate(_, prevState) {
-    const { query, searchResults, page } = this.state;
+    const { query, page } = this.state;
 
-    if (this.normalizePrevQuery(prevState.query) !== query.toLowerCase()) {
+    if (query !== prevState.query || page !== prevState.page) {
       this.setState({ status: 'pending' });
-      if (!query) {
-        this.setState({ status: 'idle' });
-        return;
-      }
+
       fetchSearchResults(query, page)
-        .then(obj => {
-          if (obj.hits.length === 0) {
+        .then(data => {
+          if (data.hits.length === 0) {
             this.setState({ status: 'idle' });
             return;
           }
-          this.setState({
-            searchResults: obj.hits,
-            status: 'resolved',
-          });
-        })
-        .catch(error => this.setState({ error, status: 'rejected' }));
-    }
 
-    if (prevState.page !== page) {
-      this.setState({ status: 'pending' });
-      fetchSearchResults(query, page)
-        .then(obj =>
-          this.setState({
-            searchResults: [...searchResults, ...obj.hits],
+          const images = this.getNormalizedImages(data.hits);
+
+          this.setState(prev => ({
+            searchResults: [...prev.searchResults, ...images],
             status: 'resolved',
-          })
-        )
-        .catch(error => this.setState({ error, status: 'rejected' }));
+            error: '',
+          }));
+        })
+        .catch(error =>
+          this.setState({ error: error.message, status: 'rejected' })
+        );
     }
   }
 
-  normalizePrevQuery = prevQuery => {
-    const normalizedPrevQuery = prevQuery ? prevQuery.toLowerCase() : prevQuery;
-    return normalizedPrevQuery;
+  handleSubmit = query => this.setState({ query, page: 1, searchResults: [] });
+
+  getNormalizedImages = array => {
+    return array.map(({ id, webformatURL, largeImageURL, tags }) => ({
+      id,
+      webformatURL,
+      largeImageURL,
+      tags,
+    }));
   };
 
   loadMore = () => {
-    this.setState({ page: this.state.page + 1 });
+    this.setState(prev => ({ page: prev.page + 1 }));
   };
 
-  modalHandler = evt => {
+  modalHandler = (largeURL = '', alt = '') => {
     this.setState({
-      image: evt.target.getAttribute('image'),
-      info: evt.target.alt,
+      largeImgURL: largeURL,
+      info: alt,
     });
     this.toggleModal();
   };
@@ -76,15 +73,14 @@ export class App extends Component {
     this.setState(({ showModal }) => ({ showModal: !showModal }));
   };
 
-  handleSubmit = query => this.setState({ query });
-
   render() {
-    const { searchResults, status, error, showModal, image, info } = this.state;
+    const { searchResults, status, error, showModal, largeImgURL, info } =
+      this.state;
     return (
       <div className={css.App}>
         <Searchbar onSubmit={this.handleSubmit} />
         {status === 'pending' && <Loader />}
-        {status === 'rejected' && <p>{error.message}</p>}
+        {status === 'rejected' && <p>{error}</p>}
         {status === 'resolved' && (
           <>
             <ImageGallery results={searchResults} onClick={this.modalHandler} />
@@ -92,7 +88,11 @@ export class App extends Component {
           </>
         )}
         {showModal && (
-          <Modal image={image} info={info} onClose={this.toggleModal} />
+          <Modal
+            largeurl={largeImgURL}
+            info={info}
+            onClose={this.modalHandler}
+          />
         )}
       </div>
     );
