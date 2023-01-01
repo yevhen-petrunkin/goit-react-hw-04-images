@@ -19,11 +19,10 @@ export class App extends Component {
     info: '',
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { query } = this.props;
-    const { searchResults, page } = this.state;
+  componentDidUpdate(_, prevState) {
+    const { query, searchResults, page } = this.state;
 
-    if (this.normalizePrevQuery(prevProps) !== query.toLowerCase()) {
+    if (this.normalizePrevQuery(prevState.query) !== query.toLowerCase()) {
       this.setState({ status: 'pending' });
       if (!query) {
         this.setState({ status: 'idle' });
@@ -56,19 +55,9 @@ export class App extends Component {
     }
   }
 
-  normalizePrevQuery = prevProps => {
-    const normalizedPrevQuery = prevProps.query
-      ? prevProps.query.toLowerCase()
-      : prevProps.query;
+  normalizePrevQuery = prevQuery => {
+    const normalizedPrevQuery = prevQuery ? prevQuery.toLowerCase() : prevQuery;
     return normalizedPrevQuery;
-  };
-
-  fetchSearchResults = (base, query, page, params) => {
-    return fetch(`${base}?q=${query}&page=${page}&${params}`).then(r => {
-      if (r.ok) {
-        return r.json();
-      }
-    });
   };
 
   loadMore = () => {
@@ -96,9 +85,11 @@ export class App extends Component {
         <Searchbar onSubmit={this.handleSubmit} />
         {status === 'pending' && <Loader />}
         {status === 'rejected' && <p>{error.message}</p>}
-        {status === 'resolved' && <ImageGallery results={searchResults} />}
         {status === 'resolved' && (
-          <Button type="button" onClick={this.loadMore} />
+          <>
+            <ImageGallery results={searchResults} onClick={this.modalHandler} />
+            <Button type="button" onClick={this.loadMore} />
+          </>
         )}
         {showModal && (
           <Modal image={image} info={info} onClose={this.toggleModal} />

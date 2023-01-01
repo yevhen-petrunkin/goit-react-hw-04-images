@@ -1,7 +1,7 @@
 import css from './Modal.module.css';
 import { Component } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader } from '../ImageGallery/Loader/Loader';
+import { Loader } from '../Loader/Loader';
 
 const modalRoot = document.querySelector('#modal-root');
 
