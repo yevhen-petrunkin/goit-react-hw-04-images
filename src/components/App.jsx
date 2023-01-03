@@ -81,11 +81,11 @@ export class App extends Component {
         <Searchbar onSubmit={this.handleSubmit} />
         {status === 'pending' && <Loader />}
         {status === 'rejected' && <p>{error}</p>}
+        {searchResults.length > 0 && (
+          <ImageGallery results={searchResults} onClick={this.modalHandler} />
+        )}
         {status === 'resolved' && (
-          <>
-            <ImageGallery results={searchResults} onClick={this.modalHandler} />
-            <Button type="button" onClick={this.loadMore} />
-          </>
+          <Button type="button" onClick={this.loadMore} />
         )}
         {showModal && (
           <Modal
