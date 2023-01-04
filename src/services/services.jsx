@@ -14,3 +14,38 @@ export const fetchSearchResults = (query, page) => {
     }
   });
 };
+
+export function reducer(state, action) {
+  switch (action.type) {
+    case 'setStatus':
+      return { ...state, status: action.status };
+    case 'renderResults':
+      return {
+        ...state,
+        searchResults: [...state.searchResults, ...action.searchResults],
+        status: action.status,
+        error: action.error,
+      };
+    case 'showError':
+      return { ...state, error: action.error, status: action.status };
+    case 'handleSubmit':
+      return {
+        ...state,
+        query: action.query,
+        page: action.page,
+        searchResults: action.searchResults,
+      };
+    case 'loadMore':
+      return { ...state, page: action.page };
+    case 'handleModal':
+      return {
+        ...state,
+        largeImgURL: action.largeImgURL,
+        info: action.info,
+      };
+    case 'toggleModal':
+      return { ...state, showModal: action.showModal };
+    default:
+      return;
+  }
+}

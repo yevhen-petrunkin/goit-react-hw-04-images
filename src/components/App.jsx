@@ -1,14 +1,15 @@
-import { Component } from 'react';
+import { useEffect, useReducer } from 'react';
 import css from './App.module.css';
-import { fetchSearchResults } from '../services/services';
+
+import { fetchSearchResults, reducer } from '../services/services';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
 
-export class App extends Component {
-  state = {
+export const App = () => {
+  const [state, dispatch] = useReducer(reducer, {
     query: '',
     searchResults: [],
     error: '',
@@ -17,84 +18,88 @@ export class App extends Component {
     showModal: false,
     largeImgURL: '',
     info: '',
-  };
+  });
 
-  componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
+  const {
+    query,
+    page,
+    searchResults,
+    status,
+    error,
+    showModal,
+    largeImgURL,
+    info,
+  } = state;
 
-    if (query !== prevState.query || page !== prevState.page) {
-      this.setState({ status: 'pending' });
-
-      fetchSearchResults(query, page)
-        .then(data => {
-          if (data.hits.length === 0) {
-            this.setState({ status: 'idle' });
-            return;
-          }
-
-          const images = this.getNormalizedImages(data.hits);
-
-          this.setState(prev => ({
-            searchResults: [...prev.searchResults, ...images],
-            status: 'resolved',
-            error: '',
-          }));
-        })
-        .catch(error =>
-          this.setState({ error: error.message, status: 'rejected' })
-        );
+  useEffect(() => {
+    if (query === '') {
+      return;
     }
+    dispatch({ type: 'setStatus', status: 'pending' });
+
+    fetchSearchResults(query, page)
+      .then(data => {
+        if (data.hits.length === 0) {
+          dispatch({ type: 'setStatus', status: 'idle' });
+          return;
+        }
+
+        const images = getNormalizedImages(data.hits);
+
+        dispatch({
+          type: 'renderResults',
+          searchResults: images,
+          status: 'resolved',
+          error: '',
+        });
+      })
+      .catch(error =>
+        dispatch({
+          type: 'showError',
+          error: error.message,
+          status: 'rejected',
+        })
+      );
+  }, [query, page]);
+
+  function handleSubmit(query) {
+    dispatch({ type: 'handleSubmit', query, page: 1, searchResults: [] });
   }
 
-  handleSubmit = query => this.setState({ query, page: 1, searchResults: [] });
-
-  getNormalizedImages = array => {
+  function getNormalizedImages(array) {
     return array.map(({ id, webformatURL, largeImageURL, tags }) => ({
       id,
       webformatURL,
       largeImageURL,
       tags,
     }));
-  };
-
-  loadMore = () => {
-    this.setState(prev => ({ page: prev.page + 1 }));
-  };
-
-  modalHandler = (largeURL = '', alt = '') => {
-    this.setState({
-      largeImgURL: largeURL,
-      info: alt,
-    });
-    this.toggleModal();
-  };
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-  };
-
-  render() {
-    const { searchResults, status, error, showModal, largeImgURL, info } =
-      this.state;
-    return (
-      <div className={css.App}>
-        <Searchbar onSubmit={this.handleSubmit} />
-        {status === 'pending' && <Loader />}
-        {status === 'rejected' && <p>{error}</p>}
-        {searchResults.length > 0 && (
-          <ImageGallery results={searchResults} onClick={this.modalHandler} />
-        )}
-        {status === 'resolved' && (
-          <Button type="button" onClick={this.loadMore} />
-        )}
-        {showModal && (
-          <Modal
-            largeurl={largeImgURL}
-            info={info}
-            onClose={this.modalHandler}
-          />
-        )}
-      </div>
-    );
   }
-}
+
+  function loadMore() {
+    dispatch({ type: 'loadMore', page: page + 1 });
+  }
+
+  function modalHandler(largeURL = '', alt = '') {
+    dispatch({ type: 'handleModal', largeImgURL: largeURL, info: alt });
+    toggleModal();
+  }
+
+  function toggleModal() {
+    dispatch({ type: 'toggleModal', showModal: !showModal });
+  }
+
+  return (
+    <div className={css.App}>
+      <Searchbar onSubmit={handleSubmit} />
+      {status === 'pending' && <Loader />}
+      {status === 'rejected' && <p>{error}</p>}
+      {searchResults.length > 0 && (
+        <ImageGallery results={searchResults} onClick={modalHandler} />
+      )}
+      {status === 'resolved' && <Button type="button" onClick={loadMore} />}
+      {showModal && (
+        <Modal largeUrl={largeImgURL} info={info} onClose={modalHandler} />
+      )}
+    </div>
+  );
+};

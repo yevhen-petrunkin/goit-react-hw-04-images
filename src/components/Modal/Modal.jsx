@@ -1,47 +1,48 @@
 import css from './Modal.module.css';
-import { Component } from 'react';
+import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader } from '../Loader/Loader';
 
 const modalRoot = document.querySelector('#modal-root');
 
-export class Modal extends Component {
-  state = { isLoading: false };
+export const Modal = ({ largeUrl, info, onClose }) => {
+  const [isLoading, setIsLoading] = useState(false);
 
-  componentDidMount() {
-    this.setState({ isLoading: true });
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
-
-  handleKeyDown = evt => {
-    if (evt.code === 'Escape') {
-      this.stopLoader();
-      this.props.onClose();
+  useEffect(() => {
+    setIsLoading(true);
+    function handleKeyDown(evt) {
+      if (evt.code === 'Escape') {
+        setIsLoading(false);
+        onClose();
+      }
     }
-  };
+    window.addEventListener('keydown', handleKeyDown);
 
-  handleOverlayClick = evt => {
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  function handleOverlayClick(evt) {
     if (evt.currentTarget === evt.target) {
-      this.props.onClose();
+      onClose();
     }
-  };
-
-  stopLoader = () => this.setState({ isLoading: false });
-
-  render() {
-    const { largeurl, info } = this.props;
-    return createPortal(
-      <div className={css.Overlay} onClick={this.handleOverlayClick}>
-        <div className={css.Modal}>
-          {this.state.isLoading && <Loader />}
-          <img src={largeurl} alt={info} onLoad={() => this.stopLoader()} />
-        </div>
-      </div>,
-      modalRoot
-    );
   }
-}
+
+  return createPortal(
+    <div className={css.Overlay} onClick={handleOverlayClick}>
+      <div className={css.Modal}>
+        {isLoading && <Loader />}
+        <img src={largeUrl} alt={info} onLoad={() => setIsLoading(false)} />
+      </div>
+    </div>,
+    modalRoot
+  );
+};
+
+Modal.propTypes = {
+  largeUrl: PropTypes.string.isRequired,
+  info: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
