@@ -1,7 +1,7 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useState } from 'react';
 import css from './App.module.css';
 
-import { fetchSearchResults, reducer } from '../services/services';
+import { fetchSearchResults } from '../services/services';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
@@ -9,61 +9,44 @@ import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
 
 export const App = () => {
-  const [state, dispatch] = useReducer(reducer, {
-    query: '',
-    searchResults: [],
-    error: '',
-    status: 'idle',
-    page: 1,
-    showModal: false,
-    largeImgURL: '',
-    info: '',
-  });
-
-  const {
-    query,
-    page,
-    searchResults,
-    status,
-    error,
-    showModal,
-    largeImgURL,
-    info,
-  } = state;
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [error, setError] = useState('');
+  const [status, setStatus] = useState('idle');
+  const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [largeImgURL, setLargeImgURL] = useState('');
+  const [info, setInfo] = useState('');
 
   useEffect(() => {
     if (query === '') {
       return;
     }
-    dispatch({ type: 'setStatus', status: 'pending' });
+    setStatus('pending');
 
     fetchSearchResults(query, page)
       .then(data => {
         if (data.hits.length === 0) {
-          dispatch({ type: 'setStatus', status: 'idle' });
+          setStatus('idle');
           return;
         }
 
         const images = getNormalizedImages(data.hits);
 
-        dispatch({
-          type: 'renderResults',
-          searchResults: images,
-          status: 'resolved',
-          error: '',
-        });
+        setSearchResults(prev => [...prev, ...images]);
+        setStatus('resolved');
+        setError('');
       })
-      .catch(error =>
-        dispatch({
-          type: 'showError',
-          error: error.message,
-          status: 'rejected',
-        })
-      );
+      .catch(error => {
+        setError(error.message);
+        setStatus('rejected');
+      });
   }, [query, page]);
 
   function handleSubmit(query) {
-    dispatch({ type: 'handleSubmit', query, page: 1, searchResults: [] });
+    setQuery(query);
+    setPage(1);
+    setSearchResults([]);
   }
 
   function getNormalizedImages(array) {
@@ -76,16 +59,17 @@ export const App = () => {
   }
 
   function loadMore() {
-    dispatch({ type: 'loadMore', page: page + 1 });
+    setPage(page + 1);
   }
 
   function modalHandler(largeURL = '', alt = '') {
-    dispatch({ type: 'handleModal', largeImgURL: largeURL, info: alt });
+    setLargeImgURL(largeURL);
+    setInfo(alt);
     toggleModal();
   }
 
   function toggleModal() {
-    dispatch({ type: 'toggleModal', showModal: !showModal });
+    setShowModal(!showModal);
   }
 
   return (
