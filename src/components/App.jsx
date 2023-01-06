@@ -43,8 +43,11 @@ export const App = () => {
       });
   }, [query, page]);
 
-  function handleSubmit(query) {
-    setQuery(query);
+  function handleSubmit(newQuery) {
+    if (newQuery === query) {
+      return;
+    }
+    setQuery(newQuery);
     setPage(1);
     setSearchResults([]);
   }
