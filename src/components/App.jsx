@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import css from './App.module.css';
 
 import { fetchSearchResults } from '../services/services';
+import { getNormalizedImages } from 'services/normalizedImages';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
@@ -50,15 +51,6 @@ export const App = () => {
     setQuery(newQuery);
     setPage(1);
     setSearchResults([]);
-  }
-
-  function getNormalizedImages(array) {
-    return array.map(({ id, webformatURL, largeImageURL, tags }) => ({
-      id,
-      webformatURL,
-      largeImageURL,
-      tags,
-    }));
   }
 
   function loadMore() {
